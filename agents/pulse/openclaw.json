@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.15",
+    "lastTouchedAt": "2026-02-28T18:49:31.373Z"
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "YOUR_OPENROUTER_API_KEY",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "openrouter/anthropic/claude-sonnet-4-6",
+            "name": "Claude Sonnet 4.6",
+            "input": [
+              "text",
+              "image"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "openrouter/anthropic/claude-sonnet-4-6"
+      },
+      "workspace": "/Users/gtrush/.openclaw-pulse/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4
+    }
+  },
+  "tools": {
+    "exec": {
+      "host": "gateway",
+      "security": "full",
+      "ask": "off"
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "channels": {
+    "convos": {
+      "enabled": true,
+      "debug": false,
+      "env": "production",
+      "groupAllowFrom": []
+    }
+  },
+  "gateway": {
+    "port": 18791,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "YOUR_GATEWAY_TOKEN"
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    },
+    "entries": {
+      "rescue": {
+        "enabled": true,
+        "env": {
+          "CONVEX_URL": "https://pleasant-hamster-759.convex.site",
+          "DASHBOARD_URL": "http://localhost:5173"
+        }
+      }
+    }
+  },
+  "plugins": {
+    "allow": [
+      "convos",
+      "web-tools"
+    ],
+    "load": {
+      "paths": [
+        "/Users/gtrush/.openclaw-pulse/extensions"
+      ]
+    },
+    "entries": {
+      "convos": {
+        "enabled": true
+      },
+      "web-tools": {
+        "enabled": true
+      }
+    }
+  }
+}
