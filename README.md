@@ -1,102 +1,43 @@
 # GREENROOM
 
-AI production studio for JellyJelly, running inside encrypted group chat.
+A group-chat prototype for coordinating a small content-production team with AI agents.
 
-Three autonomous AI agents coordinate in real-time to find content gaps, run intelligence, recruit creators, open funded production rooms, and generate QR codes — all inside a Convos group chat.
+GREENROOM connects a creative brief to research and production-room setup. The application combines agent configuration, messaging integrations and utility scripts; OpenClaw supplies the agent framework and Convos/XMTP supplies messaging.
 
-## How It Works
+## Engineering entry points
 
-```
-User types "lets go" in the group chat
-        |
-   PULSE (Creative Director)
-   Scans JellyJelly trending + NYC events
-   Cross-references to find content gaps
-   Drops 2-3 picks with creative direction
-        |
-   SCOUT (Intel & Talent)
-   Deep-dives each opportunity
-   Finds creators, funders, verifies gaps
-   Packages intel with dollar amounts
-        |
-   BANKER (Production & Deals)
-   Opens FUNDER room (green QR code)
-   Opens CREATOR room (purple QR code)
-   Posts full brief + QR codes in chat
-        |
-   Scan green QR = back the production
-   Scan purple QR = get your assignment
+- [Agent configurations](agents/) define the PULSE, SCOUT and BANKER roles.
+- [Content search](scripts/fetch-clip.mjs), [event research](scripts/research-events.mjs) and [creator discovery](scripts/find-creators.mjs) connect the workflow to external information.
+- [Room setup](scripts/create-production-room.sh) and [QR generation](scripts/generate-qr.cjs) connect a production brief to a joinable conversation.
+
+The intended flow is:
+
+```text
+Brief in group chat → PULSE proposes an angle
+                    → SCOUT gathers supporting information
+                    → BANKER prepares production rooms and invitations
 ```
 
-Full pipeline: under 90 seconds. No human in the loop.
+The integration separates role instructions from reusable scripts. Per-conversation join watchers narrow the messaging work to the room being created. External information, creator identity and any proposed payment still need verification.
 
-## Agents
+## Scope and contribution
 
-### PULSE — Creative Director
-- Scans JellyJelly trending feed in real-time
-- Cross-references with NYC events (lu.ma, google, reddit, timeout)
-- Identifies content gaps worth producing
-- Designs creative briefs with specific angles
+This repository contains the application integration and agent configurations. It was developed with AI assistance, which is recorded in the commit history. OpenClaw, Convos, XMTP, JellyJelly and OpenRouter are third-party dependencies; the underlying models and messaging protocol are not original work in this repository.
 
-### SCOUT — Intelligence & Talent
-- Deep event intel via JellyJelly API
-- Honest coverage reporting (relevant clips vs noise)
-- Creator scouting and funder identification
-- Content verification for payouts
+The original project notes describe a Claw Hack NYC build in February 2026. No award, customer adoption or production-performance result is asserted here.
 
-### BANKER — Production Manager & Deal Closer
-- Creates Convos rooms for funded productions
-- Generates colored QR codes (purple=creators, green=funders)
-- Posts full creative briefs in the main chat
-- Manages payouts after content verification
+## Inspect and run
 
-## Stack
-
-- **OpenClaw** — AI agent framework with gateway mode
-- **Convos** — Encrypted group messaging (XMTP protocol)
-- **JellyJelly API** — Content search, trending feed, creator discovery
-- **OpenRouter** — LLM inference (Claude Sonnet)
-
-## Project Structure
-
-```
-agents/
-  pulse/       — Creative director agent config
-  scout/       — Intel agent config
-  banker/      — Production manager agent config
-scripts/
-  create-production-room.sh  — Room creation + QR + join watcher
-  generate-qr.cjs            — Colored QR code generator
-  fetch-clip.mjs             — JellyJelly content search
-  research-events.mjs        — NYC event research
-  scout-event.mjs            — Event intelligence
-  find-creators.mjs          — Creator discovery
-  verify-content.mjs         — Content verification
-  greenroom-join.sh          — Join agents to any room
-  greenroom-restart.sh       — Restart all gateways
-```
-
-## Key Technical Decisions
-
-**Invite link compression fix**: Convos CLI compresses invite slugs by default (deflate + 0x1f marker). The mobile app doesn't handle compressed invites, showing "Invalid code". We patched `compressIfSmaller()` to always return uncompressed protobuf, matching the format the mobile app expects.
-
-**Per-conversation join watchers**: The global `process-join-requests --watch` initializes 22+ XMTP identities sequentially, taking too long and missing DMs. Each room now gets its own focused watcher via `--conversation <id>`, accepting joins in under 2 seconds.
-
-**Agent coordination**: Agents operate on a chain — PULSE scans, SCOUT investigates, BANKER executes. Each agent says "on it" immediately, then works in parallel where possible (SCOUT runs intel on multiple picks simultaneously).
-
-## Setup
-
-Requires:
-- OpenClaw v2026.2.15+
-- Convos CLI v0.3.2+ (`npm install -g @xmtp/convos-cli`)
-- OpenRouter API key
+Start by reading the agent configurations and scripts. The original environment used macOS, OpenClaw, Convos CLI and an OpenRouter account. The setup scripts contain environment-specific assumptions and can join conversations or start gateways; adapt them to an isolated test environment before running them.
 
 ```bash
-# Join agents to a Convos room
-bash scripts/greenroom-join.sh <invite-url>
-
-# Restart all gateways
-bash scripts/greenroom-restart.sh
+node --check scripts/scout-event.mjs
+node --check scripts/find-creators.mjs
+node --check scripts/verify-content.mjs
 ```
 
-## Built at Claw Hack NYC, February 2026
+These three JavaScript syntax checks passed on September 7, 2026. They do not exercise the external services.
+
+## Current limitations
+
+This is a prototype, not a verified production service. A fresh end-to-end messaging or payment workflow has not been demonstrated in the September 2026 review. Earlier timing claims are omitted because no reproducible benchmark was available. Agent output is a proposal until independently checked; a generated room or QR code does not establish that a production was funded or delivered.
